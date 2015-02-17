@@ -5,7 +5,7 @@ import java.util.Iterator;
 
 /**
  * Class for representing simple arithmetic expressions.
- * @author <Your name goes here>
+ * @author Anders Schneider
  * @version Feb 10, 2015
  */
 public class Expression {

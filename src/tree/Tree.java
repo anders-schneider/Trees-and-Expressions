@@ -7,7 +7,7 @@ import java.util.StringTokenizer;
 /**
  * Tree API assignment for CIT594, Spring 2015.
  * 
- * @author <Your name goes here>
+ * @author Anders Schneider
  * @param <V> The type of value that can be held in each Tree node.
  */
 public class Tree<V> implements Iterable<Tree<V>> {
@@ -20,11 +20,14 @@ public class Tree<V> implements Iterable<Tree<V>> {
      * 
      * @param value The value to be put in the root.
      * @param children The immediate children of the root.
-     * @throws IllegalArgumentException
-     *         If the operation would create a circular Tree.
      */
     public Tree(V value, Tree<V>... children) {
-        // TODO
+        this.value = value;
+        this.children = new ArrayList<Tree<V>>();
+        
+        for (Tree<V> t : children) {
+        	this.children.add(t);
+        }
     }
     
     /**
@@ -33,7 +36,7 @@ public class Tree<V> implements Iterable<Tree<V>> {
      * @param value The value to be stored in this node.
      */
     public void setValue(V value) {
-     // TODO
+    	this.value = value;
     }
     
     /**
@@ -42,7 +45,7 @@ public class Tree<V> implements Iterable<Tree<V>> {
      * @return The value in this node.
      */
     public V getValue() {
-        return null; // TODO Replace with correct result
+        return this.value;
     }
     
     /**
@@ -56,15 +59,17 @@ public class Tree<V> implements Iterable<Tree<V>> {
      *         If the operation would create a circular Tree.
      */
     public void addChild(int index, Tree<V> child) {
-        // TODO
+        this.children.add(index, child);
     }
     
     /**
      * Adds the child as the new last child of this node.
      * @param child The child to be added to this node.
+     * @throws IllegalArgumentException
+     * 		   If the operation would create a circular Tree.
      */
     public void addChild(Tree<V> child) {
-        // TODO
+        this.children.add(child);
     }
 
     /**
@@ -75,7 +80,9 @@ public class Tree<V> implements Iterable<Tree<V>> {
      *         If the operation would create a circular Tree.
      */
     public void addChildren(Tree<V>... children) {
-        // TODO
+        for (Tree<V> t : children) {
+        	this.children.add(t);
+        }
     }
     
     /**
@@ -84,19 +91,19 @@ public class Tree<V> implements Iterable<Tree<V>> {
      * @return A count of this node's immediate children.
      */
     public int getNumberOfChildren() {
-        return -1; // TODO Replace with correct result
+    	return this.children.size();
     }
     
     /**
      * Returns the <code>index</code>'th child of this node.
-     *  
+     * 
      * @param index The position of the child that is to be returned.
      * @return The child at that position.
      * @throws IndexOutOfBoundsException If <code>index</code> is negative or
      *     is greater than or equal to the current number of children of this node.
      */
     public Tree<V> getChild(int index) {
-        return null; // TODO Replace with correct result
+    	return this.children.get(index);
     }
     
     /**
@@ -106,7 +113,7 @@ public class Tree<V> implements Iterable<Tree<V>> {
      */
     @Override
     public Iterator<Tree<V>> iterator() {
-        return null; // TODO Replace with correct result
+    	return this.children.iterator();
     }
     
     /**
@@ -117,7 +124,13 @@ public class Tree<V> implements Iterable<Tree<V>> {
      * @return <code>true</code> iff the node is found.
      */
     boolean contains(Tree<V> node) {
-        return false; // TODO Replace with correct result
+    	if (this == node) {return true;}
+    	
+    	for (Tree<V> t : this.children) {
+    		if (t.contains(node)) {return true;}
+    	}
+    	
+    	return false;
     }
     
     /**
@@ -129,7 +142,21 @@ public class Tree<V> implements Iterable<Tree<V>> {
      */
     @Override
     public String toString() {
-        return null; // TODO Replace with correct result
+    	String s = value.toString();
+    	
+    	int numChil = this.getNumberOfChildren();
+    	
+    	if (this.getNumberOfChildren() == 0) {return s;}
+    	
+    	s += " (";
+    	
+    	for (int i = 0; i < numChil - 1; i++){
+    		s += this.children.get(i).toString() + " ";
+    	}
+    	s += this.children.get(numChil - 1).toString();
+    	
+    	s += ")";
+    	return s;
     }
     
     /**
@@ -146,7 +173,11 @@ public class Tree<V> implements Iterable<Tree<V>> {
      * @param indent The amount to indent the root.
      */
     private static void print(Tree<?> node, String indent) {
-        // TODO
+    	
+    	System.out.println(indent + node.getValue().toString());
+    	for (Tree<?> t : node.children) {
+    		print(t, indent + " ");
+    	}
     }
     
     /**
@@ -159,7 +190,20 @@ public class Tree<V> implements Iterable<Tree<V>> {
      */
     @Override
     public boolean equals(Object obj) {
-        return false; // TODO Replace with correct result
+    	if (!(obj instanceof Tree<?>)) {return false;}
+    	
+    	Tree<V> other = (Tree<V>) obj;
+    	
+    	if (!this.equals(this.getValue(), other.getValue())) {return false;}
+    	
+    	int numChil = this.getNumberOfChildren();
+    	if (numChil != other.getNumberOfChildren()) {return false;}
+    	
+    	for (int i = 0; i < numChil; i++) {
+    		if (!this.getChild(i).equals(other.getChild(i))) {return false;}
+    	}
+    	
+    	return true;
     }
     
     /**
@@ -182,7 +226,16 @@ public class Tree<V> implements Iterable<Tree<V>> {
      */
     @Override
     public int hashCode() {
-        return 0;  // TODO Replace with better result
+    	int hash = this.toString().hashCode();
+    	
+    	int numChil = this.getNumberOfChildren();
+    	if (numChil == 0) {return hash;}
+    	
+    	for (int i = 0; i < numChil; i++) {
+    		hash += this.getChild(i).hashCode();
+    	}
+    	
+    	return hash;
     }
     
     /**
@@ -196,11 +249,21 @@ public class Tree<V> implements Iterable<Tree<V>> {
      */
     public static Tree<String> parse(String input) {
         PushbackStringTokenizer tokenizer = new PushbackStringTokenizer(input);
-        Tree<String> tree = parse(tokenizer);
-        if (tokenizer.hasNext()) {
-            throw new IllegalArgumentException("Tokenizer error at: " + tokenizer.next());
-        }
+        
+        // Get root value
+    	String root = tokenizer.next();
+    	if ("(".equals(root) || ")".equals(root)) {
+    		throw new IllegalArgumentException("Unexpected expression: " + root);
+    	}
+    	
+    	if (!tokenizer.hasNext()) {return new Tree<String>(root);}
+        
+        Tree<String> tree = parse(tokenizer, root);
+        
         return tree;
+//        if (tokenizer.hasNext()) {
+//            throw new IllegalArgumentException("Tokenizer error at: " + tokenizer.next());
+//        }
     }
     
     /**
@@ -211,10 +274,43 @@ public class Tree<V> implements Iterable<Tree<V>> {
      * @return A Tree built from the string being tokenized.
      * @throws IllegalArgumentException If the tokenized string is malformed.
      */
-    static Tree<String> parse(PushbackStringTokenizer tokenizer)
+    static Tree<String> parse(PushbackStringTokenizer tokenizer, String root)
             throws IllegalArgumentException {
-        // Helper method for parse(String); or can be used alone
-        return null; // TODO Replace with correct result
+    	
+    	String token = tokenizer.next();
+        
+    	assert "(".equals(token);
+    	
+    	Tree<String> result = new Tree<String>(root);
+    	
+    	String nodeValue = tokenizer.next();
+    	
+    	if ("(".equals(nodeValue)) {
+    		throw new IllegalArgumentException("Unexpexted expression: " + nodeValue);
+    	}
+    	
+    	Tree<String> subtree;
+	    	
+    	token = tokenizer.next();
+
+    	while (!")".equals(token)) {
+	    	
+	    	if ("(".equals(token)) {
+	    		tokenizer.pushBack(token);
+	    		subtree = parse(tokenizer, nodeValue);
+	    		result.addChild(subtree);
+	    	} else {
+	    		subtree = new Tree<String>(nodeValue);
+	    		result.addChild(subtree);
+	    		nodeValue = token;
+	    	}
+	    	
+	    	token = tokenizer.next();
+    	}
+    	
+    	subtree = new Tree<String>(nodeValue);
+    	result.addChild(subtree);
+    	return result;
     }
     
     //---------------------------------------------------------------------
