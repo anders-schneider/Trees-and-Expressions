@@ -59,6 +59,8 @@ public class Tree<V> implements Iterable<Tree<V>> {
      *         If the operation would create a circular Tree.
      */
     public void addChild(int index, Tree<V> child) {
+    	if (child.contains(this)) {throw new IllegalArgumentException("Trees cannot have cycles");}
+    	
         this.children.add(index, child);
     }
     
@@ -69,6 +71,8 @@ public class Tree<V> implements Iterable<Tree<V>> {
      * 		   If the operation would create a circular Tree.
      */
     public void addChild(Tree<V> child) {
+    	if (child.contains(this)) {throw new IllegalArgumentException("Trees cannot have cycles");}
+    	
         this.children.add(child);
     }
 
@@ -80,8 +84,9 @@ public class Tree<V> implements Iterable<Tree<V>> {
      *         If the operation would create a circular Tree.
      */
     public void addChildren(Tree<V>... children) {
-        for (Tree<V> t : children) {
-        	this.children.add(t);
+        for (Tree<V> child : children) {
+        	if (child.contains(this)) {throw new IllegalArgumentException("Trees cannot have cycles");}
+        	this.children.add(child);
         }
     }
     
@@ -194,11 +199,14 @@ public class Tree<V> implements Iterable<Tree<V>> {
     	
     	Tree<V> other = (Tree<V>) obj;
     	
+    	// Check that they have the same root value
     	if (!this.equals(this.getValue(), other.getValue())) {return false;}
     	
+    	// Check that they have same number of children
     	int numChil = this.getNumberOfChildren();
     	if (numChil != other.getNumberOfChildren()) {return false;}
     	
+    	// Check that all of the children are the same
     	for (int i = 0; i < numChil; i++) {
     		if (!this.getChild(i).equals(other.getChild(i))) {return false;}
     	}
@@ -221,8 +229,12 @@ public class Tree<V> implements Iterable<Tree<V>> {
         return object1.equals(object2);
     }
     
-    /* (non-Javadoc)
-     * @see java.lang.Object#hashCode()
+    /**
+     * Determines a hash code for this object by adding up the hash codes of the
+     * strings that represent all of the children of this tree. The root node's string's
+     * hash code is also included in this sum.
+     * 
+     * @return integer hash code
      */
     @Override
     public int hashCode() {
@@ -252,8 +264,12 @@ public class Tree<V> implements Iterable<Tree<V>> {
         
         // Get root value
     	String root = tokenizer.next();
+    	
+    	// Check for illegal format
     	if ("(".equals(root) || ")".equals(root)) {
     		throw new IllegalArgumentException("Unexpected expression: " + root);
+    	} else if (root == null) {
+    		throw new IllegalArgumentException("Unexpected null");
     	}
     	
     	if (!tokenizer.hasNext()) {return new Tree<String>(root);}
@@ -261,9 +277,6 @@ public class Tree<V> implements Iterable<Tree<V>> {
         Tree<String> tree = parse(tokenizer, root);
         
         return tree;
-//        if (tokenizer.hasNext()) {
-//            throw new IllegalArgumentException("Tokenizer error at: " + tokenizer.next());
-//        }
     }
     
     /**
@@ -277,39 +290,53 @@ public class Tree<V> implements Iterable<Tree<V>> {
     static Tree<String> parse(PushbackStringTokenizer tokenizer, String root)
             throws IllegalArgumentException {
     	
+    	// Make sure first token is "("
     	String token = tokenizer.next();
-        
-    	assert "(".equals(token);
+    	if (!"(".equals(token)) {
+    		throw new IllegalArgumentException("Unexpected expression: " + token);
+    	}
     	
+    	// Create the root of the tree that will eventually be returned
     	Tree<String> result = new Tree<String>(root);
     	
+    	// Find the value of the (first) child
     	String nodeValue = tokenizer.next();
     	
     	if ("(".equals(nodeValue)) {
-    		throw new IllegalArgumentException("Unexpexted expression: " + nodeValue);
+    		throw new IllegalArgumentException("Unexpected expression: " + nodeValue);
     	}
     	
     	Tree<String> subtree;
-	    	
-    	token = tokenizer.next();
-
-    	while (!")".equals(token)) {
-	    	
-	    	if ("(".equals(token)) {
+	    
+    	do {
+    		token = tokenizer.next();
+    		
+    		if (token == null) {
+    			throw new IllegalArgumentException("Unexpected null");
+    		}
+    		
+    		// Reached the end of the children - add last child and then exit loop
+	    	if (")".equals(token)) {
+	        	subtree = new Tree<String>(nodeValue);
+	        	result.addChild(subtree);
+	        
+	        // Reached a child of this child node - recurse
+    		} else if ("(".equals(token)) {
 	    		tokenizer.pushBack(token);
 	    		subtree = parse(tokenizer, nodeValue);
 	    		result.addChild(subtree);
+	    		token = tokenizer.next();
+	    		nodeValue = token;
+	    		
+	    	// Reached a child; store its value in "nodeValue"
 	    	} else {
 	    		subtree = new Tree<String>(nodeValue);
 	    		result.addChild(subtree);
 	    		nodeValue = token;
 	    	}
 	    	
-	    	token = tokenizer.next();
-    	}
+    	} while (!")".equals(token));
     	
-    	subtree = new Tree<String>(nodeValue);
-    	result.addChild(subtree);
     	return result;
     }
     

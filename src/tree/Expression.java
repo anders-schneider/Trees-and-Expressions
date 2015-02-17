@@ -38,7 +38,32 @@ public class Expression {
      * @return <code>true</code> iff the Tree is a valid Expression.
      */
     private boolean valid(Tree<String> tree) {
-        return false; // TODO Replace with correct result
+    	int numChil = tree.getNumberOfChildren();
+    	
+    	// Make sure number of children is within allowable range for give operator
+    	if ("+".equals(tree.getValue()) || "*".equals(tree.getValue())){
+    		if (numChil < 2) {return false;}
+    	} else if ("/".equals(tree.getValue()) || "-".equals(tree.getValue())) {
+    		if (numChil != 2) {return false;}
+    	} else {
+    		int num;
+    		
+    		try {
+    			num = Integer.parseInt(tree.getValue());
+    		} catch (NumberFormatException e) {
+    			return false;
+    		}
+    		
+    		if (num < 0) {return false;}
+    		if (tree.getNumberOfChildren() > 0) {return false;}
+    	}
+    	
+    	// Check validity of children of this node
+    	for (int i = 0; i < numChil; i++) {
+    		if (!valid(tree.getChild(i))) {return false;}
+    	}
+    	
+    	return true;
     }
     
     /**
@@ -54,8 +79,29 @@ public class Expression {
      * @return The value of this Expression.
      */
     private int evaluate(Tree<String> tree) {
-        // Helper method for evaluate()
-        return -1; // TODO Replace with correct result
+    	int result;
+    	
+    	String val = tree.getValue();
+    	Iterator iter = tree.iterator();
+    	
+    	if ("+".equals(val)) {
+    		result = 0;
+    		while (iter.hasNext()) {
+    			result += evaluate((Tree<String>) iter.next());
+    		}
+    	} else if ("*".equals(val)) {
+    		result = 1;
+    		while (iter.hasNext()) {
+    			result = result * evaluate((Tree<String>) iter.next());
+    		}
+    	} else if ("-".equals(val)) {
+    		result = evaluate(tree.getChild(0)) - evaluate(tree.getChild(1));
+    	} else if ("/".equals(val)) {
+    		result = evaluate(tree.getChild(0)) / evaluate(tree.getChild(1));
+    	} else {
+    		result = Integer.parseInt(val);
+    	}
+    	return result;
     }
     
     /* (non-Javadoc)
@@ -67,7 +113,34 @@ public class Expression {
     }
     
     private static String toString(Tree<String> tree) {
-        // Helper method for toString()
-        return null; // TODO Replace with correct result        
+    	String result;
+    	
+    	String val = tree.getValue();
+    	Iterator iter = tree.iterator();
+    	
+    	if ("+".equals(val)) {
+    		result = "(" + toString((Tree<String>) iter.next());
+    		while (iter.hasNext()) {
+    			result += " + " + toString((Tree<String>) iter.next());
+    		}
+    		result += ")";
+    	} else if ("*".equals(val)) {
+    		result = "(" + toString((Tree<String>) iter.next());
+    		while (iter.hasNext()) {
+    			result += " * " + toString((Tree<String>) iter.next());
+    		}
+    		result += ")";
+    	} else if ("-".equals(val)) {
+    		result = "(" + toString(tree.getChild(0)) + " - " + toString(tree.getChild(1));
+    		result += ")";
+    	} else if ("/".equals(val)) {
+    		result = "(" + toString(tree.getChild(0)) + " / " + toString(tree.getChild(1));
+    		result += ")";
+    	} else {
+    		// Stand-alone numbers don't get parentheses
+    		result = val;
+    	}
+    	
+    	return result;
     }
 }

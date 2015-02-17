@@ -105,6 +105,27 @@ public class TreeTest {
     	assertTrue(bigTree.getChild(0).getValue() == 'c');
     	assertTrue(bigTree.getChild(1).getValue() == 'a');
     	assertTrue(bigTree.getChild(2).getValue() == 'b');
+    	
+    	Tree<String> u1 = new Tree<String>("A");
+    	Tree<String> u2 = new Tree<String>("B");
+    	Tree<String> u3 = new Tree<String>("C");
+    	
+    	try {
+    		u1.addChild(0, u2);
+    		u2.addChild(0, u1);
+    	} catch (IllegalArgumentException e) {
+    		assertTrue("Trees cannot have cycles".equals(e.getMessage()));
+    	}
+    	
+    	Tree<String> v1 = new Tree<String>("A");
+    	Tree<String> v2 = new Tree<String>("B");
+    	Tree<String> v3 = new Tree<String>("C");
+    	
+    	try {
+    		v1.addChild(5, v2);
+    	} catch (IndexOutOfBoundsException e) {
+    		assertTrue("Index: 5, Size: 0".equals(e.getMessage()));
+    	}
     }
 
     @Test
@@ -122,6 +143,17 @@ public class TreeTest {
     	assertTrue(bigTree.getChild(0).getValue() == 'a');
     	assertTrue(bigTree.getChild(1).getValue() == 'b');
     	assertTrue(bigTree.getChild(2).getValue() == 'c');
+    	
+    	Tree<String> u1 = new Tree<String>("A");
+    	Tree<String> u2 = new Tree<String>("B");
+    	Tree<String> u3 = new Tree<String>("C");
+    	
+    	try {
+    		u1.addChild(u2);
+    		u2.addChild(u1);
+    	} catch (IllegalArgumentException e) {
+    		assertTrue("Trees cannot have cycles".equals(e.getMessage()));
+    	}
     }
 
     @Test
@@ -139,6 +171,17 @@ public class TreeTest {
     	assertTrue(bigTree.getChild(0).getValue() == 'a');
     	assertTrue(bigTree.getChild(1).getValue() == 'b');
     	assertTrue(bigTree.getChild(2).getValue() == 'c');
+    	
+    	Tree<String> u1 = new Tree<String>("A");
+    	Tree<String> u2 = new Tree<String>("B");
+    	Tree<String> u3 = new Tree<String>("C");
+    	
+    	try {
+    		u1.addChildren(u2, u3);
+    		u2.addChildren(u1, u3);
+    	} catch (IllegalArgumentException e) {
+    		assertTrue("Trees cannot have cycles".equals(e.getMessage()));
+    	}
     }
 
     @Test
@@ -173,6 +216,12 @@ public class TreeTest {
     	
     	assertTrue(t5.getChild(0).getValue() == 1);
     	assertTrue(t1.getChild(2).getValue() == 4);
+    	
+    	try {
+    		t1.getChild(3);
+    	} catch (IndexOutOfBoundsException e) {
+    		assertTrue("Index: 3, Size: 3".equals(e.getMessage()));
+    	}
     }
 
     @Test
@@ -284,12 +333,60 @@ public class TreeTest {
 
     @Test
     public final void testParseString() {
-    	String input = "one (two (three))";
+    	String input1 = "one (two three (four five (six seven eight) nine))";
+    	Tree<String> t1 = Tree.parse(input1);
+    	assertTrue(input1.equals(t1.toString()));
     	
-    	Tree<String> tree = Tree.parse(input);
+    	String input2 = "hello";
+    	Tree<String> t2 = Tree.parse(input2);
+    	assertTrue(input2.equals(t2.toString()));
     	
-    	System.out.println(tree.toString());
-    	System.out.println(tree.getNumberOfChildren());
+    	String input3 = "hello (goodbye)";
+    	Tree<String> t3 = Tree.parse(input3);
+    	assertTrue(input3.equals(t3.toString()));
+    	
+    	String input4 = "1 (2 (3 (4 (5))))";
+    	Tree<String> t4 = Tree.parse(input4);
+    	assertTrue(input4.equals(t4.toString()));
+    	
+    	String input5 = "1 (2 (3) 4 5 6 (7) 8 9 (10 (11) 12))";
+    	Tree<String> t5 = Tree.parse(input5);
+    	assertTrue(input5.equals(t5.toString()));
+    	
+    	String input6 = "5 + 6";
+		try {
+    		Tree<String> t6 = Tree.parse(input6);
+    	} catch (IllegalArgumentException e) {
+    		assertTrue("Unexpected expression: +".equals(e.getMessage()));
+    	}
+		
+		String input7 = "(1)";
+		try {
+    		Tree<String> t7 = Tree.parse(input7);
+    	} catch (IllegalArgumentException e) {
+    		assertTrue("Unexpected expression: (".equals(e.getMessage()));
+    	}
+		
+		String input8 = "1 (2 (3 (4))";
+		try {
+    		Tree<String> t8 = Tree.parse(input8);
+    	} catch (IllegalArgumentException e) {
+    		assertTrue("Unexpected null".equals(e.getMessage()));
+    	}
+		
+		String input9 = "";
+		try {
+    		Tree<String> t9 = Tree.parse(input9);
+    	} catch (IllegalArgumentException e) {
+    		assertTrue("Unexpected null".equals(e.getMessage()));
+    	}
+		
+		String input10 = "1 )2 (3 (4))";
+		try {
+    		Tree<String> t10 = Tree.parse(input10);
+    	} catch (IllegalArgumentException e) {
+    		assertTrue("Unexpected expression: )".equals(e.getMessage()));
+    	}
     }
 
 }
